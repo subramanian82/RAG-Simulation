@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RAG Simulator</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 900px;
+    margin: 40px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+textarea, input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.step {
+    background: #eef2ff;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 6px;
+}
+
+.output {
+    background: #f1f1f1;
+    padding: 10px;
+    border-radius: 6px;
+    margin-top: 10px;
+    white-space: pre-wrap;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h1>RAG Simulator</h1>
+
+<h3>1️⃣ Add Knowledge Base</h3>
+<textarea id="knowledge" rows="4" placeholder="Paste company knowledge or document text here..."></textarea>
+<button onclick="chunkAndEmbed()">Create Embeddings</button>
+
+<div class="step">
+<strong>Chunks + Fake Embeddings:</strong>
+<div id="chunks" class="output"></div>
+</div>
+
+<h3>2️⃣ Ask a Question</h3>
+<input type="text" id="query" placeholder="Enter your question...">
+<button onclick="retrieve()">Retrieve Context</button>
+
+<div class="step">
+<strong>Retrieved Context:</strong>
+<div id="retrieved" class="output"></div>
+</div>
+
+<div class="step">
+<strong>Final Prompt Sent to LLM:</strong>
+<div id="finalPrompt" class="output"></div>
+</div>
+
+</div>
+
+<script>
+let vectorDB = [];
+
+function chunkAndEmbed() {
+    const text = document.getElementById("knowledge").value;
+    const chunks = text.split(". ");
+    vectorDB = [];
+
+    let display = "";
+
+    chunks.forEach(chunk => {
+        const embedding = chunk.length; // Fake embedding = length
+        vectorDB.push({ chunk, embedding });
+        display += `Chunk: "${chunk}"\nEmbedding: ${embedding}\n\n`;
+    });
+
+    document.getElementById("chunks").innerText = display;
+}
+
+function retrieve() {
+    const query = document.getElementById("query").value;
+    const queryEmbedding = query.length;
+
+    let closest = vectorDB.sort((a,b) =>
+        Math.abs(a.embedding - queryEmbedding) - 
+        Math.abs(b.embedding - queryEmbedding)
+    )[0];
+
+    document.getElementById("retrieved").innerText = closest.chunk;
+
+    const finalPrompt = `
+You are an AI assistant.
+Use the following context to answer the question.
+
+Context:
+${closest.chunk}
+
+Question:
+${query}
+`;
+
+    document.getElementById("finalPrompt").innerText = finalPrompt;
+}
+</script>
+
+</body>
+</html>
